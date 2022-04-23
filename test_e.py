@@ -10,5 +10,3 @@ class Tests(unittest.TestCase):
     return_value = test_utilities.runIt('E')
     if return_value != None:
         self.fail(return_value)
-
-unittest.main()
