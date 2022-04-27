@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdlib.h>
 
 typedef enum {INT_TYPE, DOUBLE_TYPE, STR_TYPE, NULL_TYPE} valueType;
 // grace is here
@@ -20,12 +21,16 @@ typedef struct Value Value;
 
 // Create a new NULL_TYPE value node.
 Value *makeNull(){
-
+    Value *val = (Value *)malloc(sizeof(Value));
+    val->type = NULL_TYPE;
+    return val;
 }
 
 // Create a new CONS_TYPE value node.
 Value *cons(Value *newCar, Value *newCdr){
-
+    Value *val = (Value *)malloc(sizeof(Value));
+    val->type = CONS_TYPE;
+    return val;
 }
 
 // Display the contents of the linked list to the screen in some kind of
