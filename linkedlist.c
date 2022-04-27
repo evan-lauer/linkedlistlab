@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 typedef enum {INT_TYPE, DOUBLE_TYPE, STR_TYPE, NULL_TYPE} valueType;
 // grace is here
 struct Value {
@@ -18,7 +20,7 @@ typedef struct Value Value;
 
 // Create a new NULL_TYPE value node.
 Value *makeNull(){
-    
+
 }
 
 // Create a new CONS_TYPE value node.
