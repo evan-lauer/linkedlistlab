@@ -8,7 +8,7 @@ struct Value {
     union {
         int i;
         double d;
-        char c;
+        char* ch;
 
         struct ConsCell {
             struct Value *car;
@@ -30,6 +30,7 @@ Value *makeNull(){
 Value *cons(Value *newCar, Value *newCdr){
     Value *val = (Value *)malloc(sizeof(Value));
     val->type = CONS_TYPE;
+    // confusing ahhg  val->c
     return val;
 }
 
@@ -37,9 +38,17 @@ Value *cons(Value *newCar, Value *newCdr){
 // readable format
 void display(Value *list){
     Value *cur = list;
-    while (cur != NULL) {
-        printf("value = %i\n", cur->value);
-        cur = cur->next;
+    while (cur->type != NULL_TYPE) {
+        if (list->type == INT_TYPE){
+            printf("value = %i\n", cur->c.car->i);
+        }
+        if (list->type == DOUBLE_TYPE){
+            printf("value = %d\n", cur->c.car->d);
+        }
+        if (list->type == STR_TYPE){
+            printf("value = %s\n", *(cur->c.car->ch));
+        }
+        cur = list->c.cdr->c.car;
     }
 }
 
