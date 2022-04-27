@@ -1,5 +1,5 @@
 typedef enum {INT_TYPE, DOUBLE_TYPE, STR_TYPE, NULL_TYPE} valueType;
-
+// grace is here
 struct Value {
     valueType type; // type will also have a CONS_TYPE as an option
     union {
