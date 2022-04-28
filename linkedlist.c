@@ -19,7 +19,7 @@ Value *makeNull(){
 Value *cons(Value *newCar, Value *newCdr){
     Value *consVal = (Value *)malloc(sizeof(Value));
     consVal->type = CONS_TYPE;
-    // confusing ahhg  val->c
+    consVal->c = (struct ConsCell){.car = newCar, .cdr = newCdr};
     return consVal;
 }
 
@@ -41,6 +41,7 @@ Value *cdr(Value *list){
 // Utility to check if pointing to a NULL_TYPE value. Use assertions to make sure
 // that this is a legitimate operation.
 bool isNull(Value *value){
+    assert(value);
     return (value->type == NULL_TYPE);
 }
 
@@ -49,17 +50,16 @@ bool isNull(Value *value){
 void display(Value *list){
     Value *cur = list;
     while (cur->type != NULL_TYPE) {
-        if (list->type == INT_TYPE){
+        if (car(cur)->type == INT_TYPE){
             printf("value = %d\n", car(cur)->i);
         }
-        if (list->type == DOUBLE_TYPE){
-            printf("value = %lf\n", cur->c.car->d);
+        if (car(cur)->type == DOUBLE_TYPE){
+            printf("value = %lf\n", car(cur)->d);
         }
-        if (list->type == STR_TYPE){
-            printf("value = %s\n", cur->c.car->s);
+        if (car(cur)->type == STR_TYPE){
+            printf("value = %s\n", car(cur)->s);
         }
-        cur->type = CONS_TYPE;
-        cur = list->c.cdr->c.car;
+        cur = cdr(cur);
     }
 }
 
@@ -71,243 +71,66 @@ Value *reverse(Value *list){
     Value* head = makeNull();
     while(cur->type != NULL_TYPE)
     {
-        Value* newCar = car(cur);
+        Value* newCar = (Value *)malloc(sizeof(Value));
+        if (car(cur)->type == STR_TYPE)
+        {
+            //newCar = (Value *)malloc(sizeof(Value *));
+            newCar->s = malloc(sizeof(char)*(strlen(car(cur)->s) + 1));
+            strcpy(newCar->s, car(cur)->s);
+            newCar->type = STR_TYPE;
+        } else
+        if (car(cur)->type == INT_TYPE)
+        {
+            //newCar = (Value *)malloc(sizeof(Value *));
+            newCar->i = car(cur)->i;
+            newCar->type = INT_TYPE;
+        } else
+        if (car(cur)->type == DOUBLE_TYPE)
+        {
+            //newCar = (Value *)malloc(sizeof(Value *));
+            newCar->d = car(cur)->d;
+            newCar->type = DOUBLE_TYPE;
+        }
+
         Value* newConsCell = cons(newCar, head);
         head = newConsCell;
-        cur = cur->c.cdr;
+        cur = cdr(cur);
     }
-    head->type = CONS_TYPE;
-    //this is the problem line
-    //head->c.car = car(cur);
-    head->c.cdr = cur;
+    
     return head;
 }
 
 // Frees up all memory directly or indirectly referred to by list. This includes strings.
 void cleanup(Value *list){
-    while (!isNull(list)){
-        Value *next = cdr(list);
-        if (list->type == STR_TYPE){
-            free(car(list)->s);
+    Value* cur = list;
+    while (!isNull(cur)){
+        Value *next = cdr(cur);
+        if (car(cur)->type == STR_TYPE){
+            free(car(cur)->s);
         }
-        free(car(list));
-        free(cdr(list));
-        free(list);
-        list = next;
+        free(car(cur));
+        free(cur);
+        cur = next;
     }
-    free(car(list));
-    free(list->c);
-    free(list);
+    free(cur);
 }
 
 // Measure length of list. Use assertions to make sure that this is a legitimate
 // operation.
 int length(Value *value){
-    //Value *cur = value;
-    //assert(isNull(value));
+    Value *cur = value;
+    assert(cur);
     int length = 0;
-    if (value->type == NULL_TYPE){
+    if (cur->type == NULL_TYPE){
         return 0;
     }
     //need to use assertions but this line failing
-    //assert(isNull(cur));
-    while (value->type != NULL_TYPE){
-        Value *next = cdr(value);
+    //assert(!isNull(cur));
+    while (cur->type != NULL_TYPE){
+        Value *next = cdr(cur);
         length++;
-        value = next;
+        cur = next;
     }
     return length;
 }
 
-
-// void testForward(Value *head, int correctLength, bool exemplary) {
-//   Value *value = head;
-//   assert(CONS_TYPE == value->type);
-//   assert(DOUBLE_TYPE == car(value)->type);
-//   assert(1 == car(value)->d);
-
-//   if (exemplary) {
-//     value = cdr(value);
-//     assert(CONS_TYPE == value->type);
-//     assert(STR_TYPE == car(value)->type);
-//     assert(!strcmp("2.0s", car(value)->s));
-
-//     value = cdr(value);
-//     assert(CONS_TYPE == value->type);
-//     assert(STR_TYPE == car(value)->type);
-//     assert(!strcmp("3.0s", car(value)->s));
-//   }
-
-//   value = cdr(value);
-//   assert(CONS_TYPE == value->type);
-//   assert(DOUBLE_TYPE == car(value)->type);
-//   assert(4 == car(value)->d);
-
-//   if (exemplary) {
-//     value = cdr(value);
-//     assert(CONS_TYPE == value->type);
-//     assert(STR_TYPE == car(value)->type);
-//     assert(!strcmp("5.0s", car(value)->s));
-//   }
-
-//   value = cdr(value);
-//   assert(CONS_TYPE == value->type);
-//   assert(DOUBLE_TYPE == car(value)->type);
-//   assert(6 == car(value)->d);
-
-//   value = cdr(value);
-//   assert(CONS_TYPE == value->type);
-//   assert(INT_TYPE == car(value)->type);
-//   assert(7 == car(value)->i);
-
-//   value = cdr(value);
-//   assert(NULL_TYPE == value->type);
-
-//   assert(correctLength == length(head));
-//   assert(!isNull(head));
-// }
-
-// void testBackward(Value *head, int correctLength, bool exemplary) {
-//   Value *value = head;
-
-//   assert(CONS_TYPE == value->type);
-//   assert(INT_TYPE == car(value)->type);
-//   assert(7 == car(value)->i);
-
-//   value = cdr(value);
-//   assert(CONS_TYPE == value->type);
-//   assert(DOUBLE_TYPE == car(value)->type);
-//   assert(6 == car(value)->d);
-
-//   if (exemplary) {
-//     value = cdr(value);
-//     assert(CONS_TYPE == value->type);
-//     assert(STR_TYPE == car(value)->type);
-//     assert(!strcmp("5.0s", car(value)->s));
-//   }
-
-//   value = cdr(value);
-//   assert(CONS_TYPE == value->type);
-//   assert(DOUBLE_TYPE == car(value)->type);
-//   assert(4 == car(value)->d);
-
-//   if (exemplary) {
-//     value = cdr(value);
-//     assert(CONS_TYPE == value->type);
-//     assert(STR_TYPE == car(value)->type);
-//     assert(!strcmp("3.0s", car(value)->s));
-
-//     value = cdr(value);
-//     assert(CONS_TYPE == value->type);
-//     assert(STR_TYPE == car(value)->type);
-//     assert(!strcmp("2.0s", car(value)->s));
-//   }
-
-//   value = cdr(value);
-//   assert(CONS_TYPE == value->type);
-//   assert(DOUBLE_TYPE == car(value)->type);
-//   assert(1 == car(value)->d);
-
-//   value = cdr(value);
-//   assert(NULL_TYPE == value->type);
-
-//   assert(correctLength == length(head));
-//   assert(!isNull(head));
-// }
-
-
-// // int main(int argc, char **argv) {
-
-// //   bool exemplary = false;
-// //   if (argc == 2 && !strcmp(argv[1], "E")) {
-// //     exemplary = true;
-// //   }
-
-// //   Value *head = makeNull();
-// //   int correctLength = 0;
-// //   assert(length(head) == correctLength);
-
-// //   Value *reverseLengthZero = reverse(head);
-// //   assert(length(reverseLengthZero) == correctLength);
-// //   cleanup(reverseLengthZero);
-
-// //   Value *val1 = malloc(sizeof(Value));
-// //   val1->type = INT_TYPE;
-// //   val1->i = 7;
-// //   head = cons(val1,head);
-// //   correctLength++;
-// //   assert(length(head) == correctLength);
-
-// //   Value *reverseLengthOne = reverse(head);
-// //   assert(length(reverseLengthOne) == correctLength);
-// //   cleanup(reverseLengthOne);
-
-// //   Value *val2 = malloc(sizeof(Value));
-// //   val2->type = DOUBLE_TYPE;
-// //   val2->d = 6.00;
-// //   head = cons(val2,head);
-// //   correctLength++;
-// //   assert(length(head) == correctLength);
-
-// //   if (exemplary) {
-// //     Value *val3 = malloc(sizeof(Value));
-// //     val3->type = STR_TYPE;
-// //     char *text = "5.0s";
-// //     val3->s = malloc(sizeof(char)*(strlen(text) + 1));
-// //     strcpy(val3->s,text);
-// //     head = cons(val3,head);
-// //     correctLength++;
-// //     assert(length(head) == correctLength);
-
-// //   }
-
-// //   Value *val4 = malloc(sizeof(Value));
-// //   val4->type = DOUBLE_TYPE;
-// //   val4->d = 4.00000;
-// //   head = cons(val4,head);
-// //   correctLength++;
-// //   assert(length(head) == correctLength);
-
-// //   if (exemplary) {
-// //     Value *val5 = malloc(sizeof(Value));
-// //     val5->type = STR_TYPE;
-// //     char *text = "3.0s";
-// //     val5->s = malloc(sizeof(char)*(strlen(text) + 1));
-// //     strcpy(val5->s,text);
-// //     head = cons(val5,head);
-// //     correctLength++;
-// //     assert(length(head) == correctLength);
-
-// //     Value *val6 = malloc(sizeof(Value));
-// //     val6->type = STR_TYPE;
-// //     text = "2.0s";
-// //     val6->s = malloc(sizeof(char)*(strlen(text) + 1));
-// //     strcpy(val6->s,text);
-// //     head = cons(val6,head);
-// //     correctLength++;
-// //     assert(length(head) == correctLength);
-
-// //   }
-
-// //   Value *val7 = malloc(sizeof(Value));
-// //   val7->type = DOUBLE_TYPE;
-// //   val7->d = 1.0;
-// //   head = cons(val7,head);
-// //   correctLength++;
-// //   assert(length(head) == correctLength);
-
-    
-// //   display(head);
-// //   testForward(head, correctLength, exemplary);
-
-// //   Value *rev = reverse(head);
-// //   display(rev);
-
-// //   testBackward(rev, correctLength, exemplary);
-
-// //   cleanup(head);
-// //   cleanup(rev);
-
-// //   head = NULL;
-// //   rev = NULL;
-// // }
